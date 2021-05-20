@@ -4,4 +4,5 @@ Flask==1.1.2
 itsdangerous==2.0.0
 Jinja2==3.0.0
 MarkupSafe==2.0.0
+python-dotenv==0.17.1
 Werkzeug==2.0.0

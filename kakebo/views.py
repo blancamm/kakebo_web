@@ -2,6 +2,7 @@
 from flask import jsonify, render_template
 from kakebo import app
 import sqlite3
+from kakebo.forms import MovimientosForm
 
 @app.route('/')
 def index():
@@ -35,7 +36,8 @@ def index():
 
 @app.route("/nuevo", methods= ['GET', 'POST'])
 def nuevo():
-    return render_template('alta.html')
+    form = MovimientosForm()
+    return render_template('alta.html', form= form)
 
 @app.route('/deberes')
 def deberes():

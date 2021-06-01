@@ -1,5 +1,5 @@
 
-from flask import jsonify, render_template
+from flask import jsonify, render_template, request
 from kakebo import app
 import sqlite3
 from kakebo.forms import MovimientosForm
@@ -22,9 +22,9 @@ def index():
             d[tclave[0]]=valor
         
         if d['esGasto']== 0:
-            saldo += d['cantidad']
+            saldo = saldo + d['cantidad']
         elif d['esGasto']== 1:
-            saldo -=d['cantidad']
+            saldo = saldo - d['cantidad']
         
         d['saldo']= saldo
 
@@ -36,8 +36,17 @@ def index():
 
 @app.route("/nuevo", methods= ['GET', 'POST'])
 def nuevo():
-    form = MovimientosForm()
-    return render_template('alta.html', form= form)
+    formulario = MovimientosForm()
+
+    if request.method == 'GET':
+        return render_template('alta.html', form= formulario)
+    else:
+        if formulario.validate(): #esto es un metodo del formulario flask en el que llama a los validators
+            pass  #si es true, es que no hay errores 
+        else:
+            return render_template('alta.html', form= formulario)
+          
+
 
 @app.route('/deberes')
 def deberes():

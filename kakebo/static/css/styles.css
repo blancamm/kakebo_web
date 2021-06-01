@@ -1,0 +1,13 @@
+.mylabel {
+    width: 80px;
+    display: inline-block;
+    font-weight: bold;
+    text-align: right;
+}
+
+.msg-err {
+    font-size: 0.8em;
+    color: darkred;
+    font-weight: bold;
+    margin-left: 105px;
+}

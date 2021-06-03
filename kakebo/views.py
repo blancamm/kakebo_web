@@ -1,57 +1,41 @@
 from kakebo import app
 from flask import jsonify, render_template, request, redirect, url_for, flash #flash para mandar mensajes genericos
-import sqlite3
+from kakebo.dataaccess import *
 from kakebo.forms import FiltarMovimientos, MovimientosForm
 from datetime import date
 
+dbManager= DBmanager() #como es una clase, tengo que instanciarla
 
-def consultaSQL(query, parametros= []):
-
-    # Se abre la conexion
-    conexion = sqlite3.connect('movimientos.db')
-    cur=conexion.cursor()   
-
-    # Se ejecuta la consulta
-    cur.execute(query, parametros)
-
-    # Obtenemos los datos de la consulta  
-    claves = cur.description 
-    filas = cur.fetchall() 
-
-    # Procesamos los datos/ registros en una lista de diccionarios
-    resultado= []
-    for fila in filas: 
-        d = {}
-        for tclave, valor in zip(claves,fila):
-            d[tclave[0]]=valor
-        
-        resultado.append(d)
-        
-    conexion.close()
-
-    return resultado
-
-def modificaSQL(query, parametros = []):
-    conexion = sqlite3.connect('movimientos.db')
-    cur=conexion.cursor() 
-
-    cur.execute(query, parametros)
-
-    conexion.commit()
-    conexion.close()
-
-
-
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
 
-    filtraform=FiltarMovimientos() #si me hacen un get me viene un formulario informado 
-    #rellena el fomrulario con esta info
+    filtraform=FiltarMovimientos()  #asi te instancia le formulario con los datos de entrada
+    #el formulario solo viaje en un post, no en un get, por lo que hay que meterle , inicializar el formulario
+    #con los datos de entrada
 
+    parametros = []
+    query= "SELECT * FROM movimientos WHERE 1=1" #el where 1=1 se pone para que te deje poner un AND (pero ponemos una condicion que siempre es cierta 1=1 siempre es verdadero)
+    
+    if request.method=='POST':
 
+        if filtraform.validate():   
+            if filtraform.fechaDesde.data != None:#o sea que se ha informado de algo y no esta vacio
+                query += " AND fecha >= ?" 
+                parametros.append(filtraform.fechaDesde.data)
+            if filtraform.fechaHasta.data != None:
+                query += " AND fecha <= ?"
+                parametros.append(filtraform.fechaHasta.data)
+            if filtraform.texto.data != '':
+                query += ' AND concepto LIKE ?' #METER ESTO ESTO EN EL ORDENADOR EL SIMBOLO % PARA QUE APAREZCA ALGO EN ESE HUECO DONDE ESTA %
+                parametros.append("%{}%".format(filtraform.texto.data))
 
-    movimientos= consultaSQL('SELECT * FROM movimientos;')
+    query += " ORDER BY fecha" #queremos ordenarlos por fache dandonos igual si es GET Y POST. ORDER BY SIEMPRE TIENE QUE SER LA ULTIMA ORDEN SIEMPRE.
+    print(query)
+    movimientos=dbManager.consultaMuchasSQL(query, parametros) #siempre te tiene que hacer los movimientos con el query que toque, para que se use en el return
 
+    # ya no es necesaria la siguiente linea, porque si no se pone una fecha para filtrar, te da
+    # todos los movimientos segun esta instruccion que simepre es cierta query= "SELECT * FROM movimientos WHERE 1=1" que esta arriba y que sustitye a 
+    #movimientos= consultaSQL('SELECT * FROM movimientos;').  Además, si no metemos unos filtros (un post) queremos que nos devulve la render template
     saldo = 0
     for diccionario in movimientos:
 
@@ -62,7 +46,9 @@ def index():
         
         diccionario['saldo']= saldo
 
-    return render_template('movimientos.html', datos=movimientos, formulario = filtraform) #voy a meter los movimientos que son los registros según lo de arriba
+    #EL RETURN ESTA FUERA DEL POST PORQUE ES UN FILTRO Y QUEREMOS INFORMACION, HACEMOS UN GET
+
+    return render_template('movimientos.html', datos=movimientos, formulario = filtraform)
 
 @app.route("/nuevo", methods= ['GET', 'POST'])
 def nuevo():
@@ -89,7 +75,7 @@ def nuevo():
             #hay que controlar los errores de accesos
 
             try:
-                modificaSQL(query, [formulario.fecha.data, formulario.concepto.data, formulario.categoria.data, formulario.esGasto.data, formulario.cantidad.data])
+                dbManager.modificaSQL(query, [formulario.fecha.data, formulario.concepto.data, formulario.categoria.data, formulario.esGasto.data, formulario.cantidad.data])
             except sqlite3.Error as el_error:
                 print('Error en SQL INSERT' , el_error)
                 flash('Se ha producido un error en la base de datos. Pruebe en unos minutos.') #ahora se prepara la plantilla 'base.html' para este flash que es generico (el flash lo que hace es que este mensaje este disponbible para el html)
@@ -104,16 +90,16 @@ def nuevo():
 @app.route('/borrar/<int:id>', methods=['GET', 'POST'])
 def borrar(id):
     if request.method == 'GET':
-        filas= consultaSQL("SELECT * FROM movimientos WHERE id=?;", [id])
-        if len(filas)==0: #por si acaso alguien ya ha borrado el registro
+        registro= dbManager.consultaUnaSQL("SELECT * FROM movimientos WHERE id=?;", [id])
+        if not registro: #por si acaso alguien ya ha borrado el registro
             flash('El registro no existe', 'error')
-            return render_template('borrar.html')
+            return render_template('borrar.html', movimiento= {})
 
-        return render_template('borrar.html', movimiento=filas[0])
+        return render_template('borrar.html', movimiento=registro)
     
     else:
         try:
-            modificaSQL("DELETE FROM movimientos WHERE id=?;", [id])
+            dbManager.modificaSQL("DELETE FROM movimientos WHERE id=?;", [id])
         except sqlite3.error as e:
             flash('Se ha producido un error en la base de datos. Pruebe en unos minutos.', 'error')
             return redirect(url_for('index'))
@@ -134,12 +120,11 @@ def borrar(id):
 @app.route('/modificar/<int:id>', methods=['GET', 'POST'])
 def modificar(id):
     if request.method== 'GET':
-        filas= consultaSQL("SELECT * FROM movimientos WHERE id=?;", [id])
-        if len(filas)==0: 
+        registro= dbManager.consultaUnaSQL("SELECT * FROM movimientos WHERE id=?;", [id])
+        if not registro: 
             flash('El registro no existe', 'error')
-            return render_template('modificar.html',)
+            return render_template('modificar.html', form=MovimientosForm())
 
-        registro = filas[0]
         #como la data cogida de la fila[0] (que es un diccionario con ese registro) 
         #nos da la fecha en el formato incorrecto, se hace lo siguiente:
         registro['fecha']= date.fromisoformat(registro['fecha'])
@@ -157,7 +142,7 @@ def modificar(id):
         if formulario.validate():
             query = "UPDATE movimientos SET fecha=?, concepto=?, categoria=?, esGasto=?, cantidad=? WHERE id=?;"
             try:
-                modificaSQL(query, [formulario.fecha.data, formulario.concepto.data, formulario.categoria.data,
+                dbManager.modificaSQL(query, [formulario.fecha.data, formulario.concepto.data, formulario.categoria.data,
                                     formulario.esGasto.data, formulario.cantidad.data, id]) #formulario porque es instancia de Movimeintos form que tiene fecha \
                                     #que es una instancia de la clase Field con atributo data
                 

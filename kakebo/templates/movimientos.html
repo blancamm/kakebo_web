@@ -12,12 +12,12 @@
             <th>Tipo</th>
             <th>Cantidad</th> 
             <th>Saldo</th>
-            <th>Opciones</th>
+            <th></th>
         </tr>
         {% for movimiento in datos %}
         <tr>
             <td>{{ movimiento.fecha }}</td>
-            <td>{{ movimiento.concepto}}</td>
+            <td>{{ movimiento.concepto }}</td>
             <td>{{ movimiento.categoria }}</td>
             <td>{% if movimiento.esGasto == 0 %}
                     Ingreso
@@ -26,7 +26,7 @@
                 {% endif %}
             </td>
             <td>{{ movimiento.cantidad }} €</td>
-            <td>{{movimiento.saldo}} €</td>
+            <td>{{ movimiento.saldo }} €</td>
             <td class="btn">
                 <a href="/borrar/{{movimiento.id}}">Borrar</a>
                 |
@@ -35,9 +35,7 @@
         </tr>
         {% endfor %}
     </table>
-    <form action="/" method="get"> 
-        <!-- es get porque no quiero modificar nada del servdior, 
-        solo quiero filtrar-->
+    <form action="/" method="post"> 
         <fieldset class="container">
             {{ formulario.hidden_tag() }}
             <div>
@@ -59,12 +57,12 @@
                 {% endfor %}
             </div> 
             <div>
-                {{ formulario.texto.label(class="my label") }}
+                {{ formulario.texto.label(class="mylabel") }}
                 {{ formulario.texto() }}
             </div>
         </fieldset>
         {{formulario.submit}}
-        
+        <a href="/">Reset</a>
     </form> 
     {% endblock %}
 

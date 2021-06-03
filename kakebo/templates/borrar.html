@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Borrar{% endblock %}
+
+{% block contenido %}
+<h1>Borrar movimiento</h1>
+<div class="card">
+    <div>
+        <label for="fecha">Fecha</label>
+        <input disabled type="text" name="fecha" value="{{ movimiento.fecha}}">
+    </div>       
+    <div >
+        <label for="concepto">Concepto</label>
+        <input disabled type="text" name="concepto" value="{{ movimiento.concepto}}">
+
+    </div>
+    <div >
+        <label for="categoria">Categoria</label>
+        <input disabled type="text" name="categoria" value="{{ movimiento.categoria}}">
+    </div>
+    <div >
+        <label for="cantidad">Cantidad</label>
+        <input disabled type="text" name="cantidad" value="{{ movimiento.cantidad}}">
+    </div>
+    <div >
+        <label for="esGasto">esGasto</label>
+        <input disabled type="checkbox" name="esGasto" {% if movimiento.esGasto !=0 %} checked {% endif %}>
+    </div>
+    <div>
+        <p class="btn">¿Borrar el formulario del registro {{ movimiento.id }}?</p>
+    </div>
+
+    <!-- Para borrar un dato, tenemos que decirselo a la base de datos, es decir, un post, 
+    que para hacerlo hay que usar un formulario-->
+    
+    <form action="/borrar/{{movimiento.id}}" method="post">
+        <input type="submit" value="Aceptar">
+        <a href="/">Cancelar</a>
+    </form>
+</div>
+
+    
+
+
+{% endblock %}

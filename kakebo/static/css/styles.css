@@ -11,3 +11,28 @@
     font-weight: bold;
     margin-left: 105px;
 }
+
+.popup {
+    background-color: floralwhite;
+   }
+   
+.popup > p {
+       font-size: 1.2em;
+       text-align: center;
+
+   }
+
+.popup p.aviso {
+    color: green;
+}
+
+.popup p.error {
+    color: darkred;
+}
+
+.btn {
+       font-size: 0.8em;
+       font-weight: bold;
+       color: darkred;
+
+}

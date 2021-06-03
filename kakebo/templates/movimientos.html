@@ -11,7 +11,8 @@
             <th>Categoria</th>
             <th>Tipo</th>
             <th>Cantidad</th> 
-            <th>Sueldo</th>
+            <th>Saldo</th>
+            <th>Opciones</th>
         </tr>
         {% for movimiento in datos %}
         <tr>
@@ -26,9 +27,45 @@
             </td>
             <td>{{ movimiento.cantidad }} €</td>
             <td>{{movimiento.saldo}} €</td>
+            <td class="btn">
+                <a href="/borrar/{{movimiento.id}}">Borrar</a>
+                |
+                <a href="/modificar/{{movimiento.id}}">Modificar</a>
+            </td>
         </tr>
         {% endfor %}
     </table>
+    <form action="/" method="get"> 
+        <!-- es get porque no quiero modificar nada del servdior, 
+        solo quiero filtrar-->
+        <fieldset class="container">
+            {{ formulario.hidden_tag() }}
+            <div>
+                {{ formulario.fechaDesde.label(class="mylabel") }}
+                {{ formulario.fechaDesde(type="date") }}
+                {% for error in formulario.fechaDesde.errors %}
+                <p class="msg-err">
+                        {{ error }}
+                </p>
+                {% endfor %}
+            </div> 
+            <div>
+                {{ formulario.fechaHasta.label(class="mylabel") }}
+                {{ formulario.fechaHasta(type="date") }}
+                {% for error in formulario.fechaHasta.errors %}
+                <p class="msg-err">
+                        {{ error }}
+                </p>
+                {% endfor %}
+            </div> 
+            <div>
+                {{ formulario.texto.label(class="my label") }}
+                {{ formulario.texto() }}
+            </div>
+        </fieldset>
+        {{formulario.submit}}
+        
+    </form> 
     {% endblock %}
 
  

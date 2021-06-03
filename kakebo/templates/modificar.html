@@ -3,10 +3,12 @@
 {% block titulo %}Nuevo{% endblock %}
 
 {% block contenido %}
-<h1>Nuevo movimiento  </h1>
-<form action="nuevo" method="post">
+<h1>Modificar movimiento  </h1>
+<form action="/modificar/{{form.id.data}}" method="post">
     <fieldset class="container">
         {{ form.hidden_tag() }}
+        <!-- Par ahacer un post, y auntentificarlo necesito la clave secreta que 
+        en el hidden tag de arriba-->
         <div>
             {{ form.fecha.label(class="mylabel") }}
             {{ form.fecha(placeholder="AAAA-MM-DD") }}
